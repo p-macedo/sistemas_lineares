@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas Lineares - Métodos de Adição e Substituição (Versão Didática)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        success: {
+                            500: '#10b981',
+                            700: '#047857',
+                        },
+                        warning: {
+                            500: '#f59e0b',
+                            700: '#b45309',
+                        },
+                        error: {
+                            500: '#ef4444',
+                            700: '#b91c1c',
+                        }
+                    },
+                    animation: {
+                        'bounce-once': 'bounce 0.5s ease-in-out 1',
+                        'pulse-once': 'pulse 0.5s ease-in-out 1',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .equation-input {
+            width: 60px;
+            text-align: center;
+            border-bottom: 2px solid #0284c7;
+            margin: 0 5px;
+        }
+
+        .fraction {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: center;
+            margin: 0 2px;
+        }
+
+        .numerator {
+            border-bottom: 1px solid black;
+            display: block;
+            padding: 0 5px;
+        }
+
+        .denominator {
+            display: block;
+            padding: 0 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.5s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .math-expression {
+            font-size: 1.25rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+
+        .modal-enter {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal-enter .modal-content {
+            transform: translateY(-20px);
+        }
+
+        .modal-exit {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-exit .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Visual improvements */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .gradient-header {
+            background: linear-gradient(90deg, #0ea5e9 0%, #0369a1 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen font-sans antialiased">
+    <!-- Mensagem para quando JavaScript está desabilitado -->
+    <div
+        class="no-js-message hidden bg-red-100 border-l-4 border-red-500 p-4 fixed inset-0 z-50 flex items-center justify-center">
+        <div class="max-w-md bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold text-red-700 mb-4">JavaScript Necessário</h2>
+            <p class="text-gray-700 mb-4">Esta aplicação requer JavaScript para funcionar corretamente. Por favor,
+                habilite o JavaScript no seu navegador e recarregue a página.</p>
+            <button onclick="location.reload()"
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Recarregar Página
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Identificação -->
+    <div id="student-modal" class="modal fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+        <div class="modal-content glass rounded-xl shadow-2xl p-8 w-full max-w-lg">
+            <h2 class="text-3xl font-bold text-primary-700 mb-6 text-center">Identificação do Aluno</h2>
+            <form id="student-form">
+                <div class="mb-5">
+                    <label for="student-name" class="block text-gray-700 font-medium mb-2">Nome Completo:</label>
+                    <input type="text" id="student-name"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required>
+                </div>
+                <div class="mb-8">
+                    <label for="student-class" class="block text-gray-700 font-medium mb-2">Turma:</label>
+                    <select id="student-class"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required>
+                        <option value="" disabled selected>Selecione a turma</option>
+                        <option value="3ª Série A">3ª Série A</option>
+                        <option value="3ª Série B">3ª Série B</option>
+                        <option value="3ª Série C">3ª Série C</option>
+                    </select>
+                </div>
+                <div class="flex justify-center">
+                    <button type="submit"
+                        class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 text-lg shadow">
+                        Começar Exercícios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl hidden" id="main-content">
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <div class="gradient-header rounded-xl py-8 px-4 shadow-lg mb-4">
+                <h1 class="text-5xl font-extrabold text-white mb-2 drop-shadow">Sistemas Lineares</h1>
+                <p class="text-xl text-blue-100 font-medium">Aprenda a resolver sistemas de equações usando adição e
+                    substituição</p>
+            </div>
+        </header>
+
+        <!-- Progress Indicator -->
+        <div id="progress-container"
+            class="hidden fixed top-4 right-4 bg-white/90 p-4 rounded-xl shadow-xl z-10 border border-gray-200 glass">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-gray-700">Seu Progresso</h3>
+                <span id="progress-percent" class="font-bold text-primary-700">0%</span>
+            </div>
+            <div class="relative w-20 h-20">
+                <svg class="w-full h-full" viewBox="0 0 36 36">
+                    <path d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" stroke-width="3" />
+                    <path id="progress-ring" class="progress-ring__circle" d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0ea5e9" stroke-width="3"
+                        stroke-dasharray="100, 100" stroke-dashoffset="100" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="progress-score" class="text-lg font-bold">0/10</span>
+                </div>
+            </div>
+            <div id="progress-message" class="mt-2 text-sm text-center text-gray-600">Comece a resolver os exercícios!
+            </div>
+        </div>
+
+        <!-- Tutorial Section -->
+        <section class="mb-12 bg-white rounded-xl shadow-md overflow-hidden glass">
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-primary-700 mb-6 flex items-center">
+                    <span class="material-icons mr-2">school</span>
+                    Métodos para resolver sistemas lineares
+                </h2>
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">O que é um sistema linear?</h3>
+                    <p class="text-gray-700 mb-4">
+                        Um sistema linear é um conjunto de duas ou mais equações lineares com as mesmas variáveis. Um
+                        sistema 2x2 tem a forma geral:
+                    </p>
+                    <div class="math-expression">
+                        $\begin{cases}
+                        a_1x + b_1y = c_1 \\
+                        a_2x + b_2y = c_2
+                        \end{cases}$
+                    </div>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mt-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <span class="material-icons text-yellow-500">lightbulb</span>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Dica do professor</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    Sempre confira se as equações são realmente diferentes (não múltiplos uma da outra)
+                                    para garantir que o sistema tem solução única!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Método da Substituição</h3>
+                    <ol class="list-decimal pl-6 space-y-3 text-gray-700">
+                        <li>
+                            <strong>Isolar uma variável:</strong> Escolha uma das equações e isole x ou y.<br>
+                            <span class="text-sm text-gray-500">Exemplo: 2x + y = 5 → y = 5 - 2x</span>
+                        </li>
+                        <li>
+                            <strong>Substituir na outra equação:</strong> Substitua a expressão encontrada na outra
+                            equação.<br>
+                            <span class="text-sm text-gray-500">Exemplo: 3x + 2y = 12 → 3x + 2(5 - 2x) = 12</span>
+                        </li>
+                        <li>
+                            <strong>Resolver para a variável restante:</strong> Resolva a equação resultante para
+                            encontrar o valor de uma variável.<br>
+                            <span class="text-sm text-gray-500">Exemplo: 3x + 10 - 4x = 12 → -x = 2 → x = -2</span>
+                        </li>
+                        <li>
+                            <strong>Substituir de volta:</strong> Use o valor encontrado para determinar a outra
+                            variável.<br>
+                            <span class="text-sm text-gray-500">Exemplo: y = 5 - 2(-2) → y = 5 + 4 → y = 9</span>
+                        </li>
+                    </ol>
+                </div>
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Método da Adição</h3>
+                    <ol class="list-decimal pl-6 space-y-3 text-gray-700">
+                        <li>
+                            <strong>Alinhar as equações:</strong> Escreva as equações uma sobre a outra, alinhando as
+                            variáveis.<br>
+                            <span class="text-sm text-gray-500">Exemplo: 2x + 3y = 7<br>x - y = 1</span>
+                        </li>
+                        <li>
+                            <strong>Multiplicar para igualar coeficientes:</strong> Multiplique uma ou ambas equações
+                            para que os coeficientes de uma variável fiquem iguais em módulo.<br>
+                            <span class="text-sm text-gray-500">Exemplo: Multiplique a segunda equação por 3 → 3x - 3y =
+                                3</span>
+                        </li>
+                        <li>
+                            <strong>Somar ou subtrair as equações:</strong> Some ou subtraia as equações para eliminar
+                            uma variável.<br>
+                            <span class="text-sm text-gray-500">Exemplo: 2x + 3y = 7<br>+ 3x - 3y = 3<br>5x = 10 → x =
+                                2</span>
+                        </li>
+                        <li>
+                            <strong>Substituir para encontrar a outra variável:</strong> Use o valor encontrado para
+                            determinar a outra variável.<br>
+                            <span class="text-sm text-gray-500">Exemplo: 2 - y = 1 → y = 1</span>
+                        </li>
+                    </ol>
+                </div>
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Exemplos resolvidos</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h4 class="font-semibold text-blue-800 mb-2">Exemplo 1: Método da Substituição</h4>
+                            <div class="math-expression mb-2">
+                                $\begin{cases}
+                                x + y = 5 \\
+                                2x - y = 1
+                                \end{cases}$
+                            </div>
+                            <ol class="list-decimal pl-5 space-y-1 text-gray-700">
+                                <li>Isolar x na primeira equação: x = 5 - y</li>
+                                <li>Substituir na segunda equação: 2(5 - y) - y = 1 → 10 - 2y - y = 1 → -3y = -9 → y = 3
+                                </li>
+                                <li>Substituir y na primeira equação: x = 5 - 3 → x = 2</li>
+                                <li><span class="font-bold text-green-700">Solução: x = 2, y = 3</span></li>
+                            </ol>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h4 class="font-semibold text-blue-800 mb-2">Exemplo 2: Método da Adição</h4>
+                            <div class="math-expression mb-2">
+                                $\begin{cases}
+                                3x + 2y = 8 \\
+                                2x - y = 3
+                                \end{cases}$
+                            </div>
+                            <ol class="list-decimal pl-5 space-y-1 text-gray-700">
+                                <li>Multiplicar a segunda equação por 2: 4x - 2y = 6</li>
+                                <li>Somar com a primeira equação: <br>
+                                    3x + 2y = 8<br>
+                                    + 4x - 2y = 6<br>
+                                    7x = 14 → x = 2
+                                </li>
+                                <li>Substituir x na segunda equação: 2(2) - y = 3 → 4 - y = 3 → y = 1</li>
+                                <li><span class="font-bold text-green-700">Solução: x = 2, y = 1</span></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <span class="material-icons text-yellow-500">lightbulb</span>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Dica importante</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                Você pode escolher qualquer método para resolver um sistema linear. O método da
+                                substituição é geralmente melhor quando uma variável já está isolada ou pode ser
+                                facilmente isolada. O método da adição é útil quando os coeficientes são fáceis de
+                                igualar.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises Section -->
+        <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden glass">
+                <div class="p-8 border-b border-gray-200">
+                    <h2 class="text-2xl font-bold text-primary-700 mb-2 flex items-center">
+                        <span class="material-icons mr-2">assignment</span>
+                        Exercícios Práticos
+                    </h2>
+                    <p class="text-gray-600">Resolva os sistemas abaixo usando o método indicado.</p>
+                </div>
+                <div class="p-8">
+                    <div id="exercises-container" class="space-y-8">
+                        <!-- Exercises will be generated here by JavaScript -->
+                    </div>
+                    <div class="mt-8 flex justify-center">
+                        <button id="check-all-btn"
+                            class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 flex items-center text-lg">
+                            <span class="material-icons mr-2">check_circle</span>
+                            Verificar Todos os Exercícios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="hidden bg-white rounded-xl shadow-md overflow-hidden mb-12 glass">
+            <div class="p-8 border-b border-gray-200 bg-gradient-to-r from-primary-500 to-primary-700">
+                <h2 class="text-2xl font-bold text-white flex items-center">
+                    <span class="material-icons mr-2">emoji_events</span>
+                    Seu Desempenho
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
+                        <div class="text-4xl font-bold text-success-700 mb-2" id="correct-count">0</div>
+                        <div class="text-green-800 font-medium">Respostas Corretas</div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+                        <div class="text-4xl font-bold text-warning-700 mb-2" id="incorrect-count">0</div>
+                        <div class="text-yellow-800 font-medium">Respostas Incorretas</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+                        <div class="text-4xl font-bold text-primary-700 mb-2" id="percentage">0%</div>
+                        <div class="text-blue-800 font-medium">Taxa de Acerto</div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Feedback:</h3>
+                    <div id="feedback-message" class="p-4 rounded-lg bg-gray-100 text-gray-800">
+                        Comece a resolver os exercícios para receber feedback!
+                    </div>
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <button id="retry-incorrect-btn"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-200 flex items-center">
+                        <span class="material-icons mr-2">replay</span>
+                        Tentar Novamente os Erros
+                    </button>
+                    <button id="reset-all-btn"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-200 flex items-center">
+                        <span class="material-icons mr-2">refresh</span>
+                        Reiniciar Todos
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="js/telegramSender.js"></script>
+    <script src="js/focus-mode.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Exibe o modal de foco assim que a página carrega
+            if (typeof showFocusModal === "function") showFocusModal();
+
+            // Variáveis para armazenar dados do aluno
+            let studentName = '';
+            let studentClass = '';
+            let currentMethod = 'substitution'; // Padrão: substituição
+
+            // Elementos do modal
+            const modal = document.getElementById('student-modal');
+            const studentForm = document.getElementById('student-form');
+            const mainContent = document.getElementById('main-content');
+
+            // Mostrar modal ao carregar a página
+            modal.classList.remove('hidden');
+
+            // Quando o formulário for enviado
+            studentForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                studentName = document.getElementById('student-name').value.trim();
+                studentClass = document.getElementById('student-class').value.trim();
+
+                if (studentName && studentClass) {
+                    // Captura o horário de início da atividade
+                    const startTimeObj = new Date();
+                    const startTimeStr = startTimeObj.toLocaleString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+
+                    // Salva o horário de início para cálculo do tempo gasto
+                    window._atividadeStartTime = startTimeObj;
+
+                    // Enviar dados ao Telegram (professor recebe notificação)
+                    const message = `📊 Início de Atividade detectada: Sistemas Lineares\n` +
+                        `👨‍🎓 ${studentName} - ${studentClass}\n🕒 Início: ${startTimeStr}\n\n`;
+
+                    sendToTelegram(message);
+
+                    // Esconder modal e mostrar conteúdo principal
+                    modal.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
+                    initExercises();
+
+                    // Adiciona listener para envio do resultado ao Telegram ao finalizar todos os exercícios
+                    document.getElementById('check-all-btn').addEventListener('click', function telegramResultListener() {
+                        setTimeout(() => {
+                            const solved = document.querySelectorAll('.exercise[data-solved="true"]').length;
+                            const total = 10;
+                            const percent = Math.round((solved / total) * 100);
+
+                            // Calcula o tempo gasto
+                            const endTime = new Date();
+                            const startTime = window._atividadeStartTime || endTime;
+                            const diff = Math.floor((endTime - startTime) / 1000);
+                            const minutes = Math.floor(diff / 60);
+                            const seconds = diff % 60;
+
+                            // Só envia se todos foram verificados
+                            if (solved + document.querySelectorAll('.exercise[data-solved="false"]').length === total) {
+                                const resultMessage = `🏁 Finalização de Atividade: Sistemas Lineares\n` +
+                                    `👨‍🎓 ${studentName} -  ${studentClass}\n` +
+                                    `✅ Acertos: ${solved}/${total}\n` +
+                                    `📈 Taxa de acerto: ${percent}%\n` +
+                                    `⏳ Tempo gasto: ${minutes}min ${seconds}s`;
+                                sendToTelegram(resultMessage);
+                            }
+                        }, 500);
+                        this.removeEventListener('click', telegramResultListener);
+                    }, { once: true });
+                }
+            });
+
+            function initExercises() {
+                const container = document.getElementById('exercises-container');
+                const progressContainer = document.getElementById('progress-container');
+                const resultsSection = document.getElementById('results-section');
+                let correctAnswers = 0;
+                const totalExercises = 10;
+                let exercisesData = [];
+                let startTime = new Date();
+
+                // Função para gerar números aleatórios
+                function getRandom(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                }
+
+                // Função para gerar números não nulos
+                function getNonZeroRandom(min, max) {
+                    let num;
+                    do {
+                        num = getRandom(min, max);
+                    } while (num === 0);
+                    return num;
+                }
+
+                // Função para gerar sistemas lineares
+                function generateSystem() {
+                    // Garantir soluções não triviais (-5 a 5, excluindo zero)
+                    const x = getNonZeroRandom(-5, 5);
+                    const y = getNonZeroRandom(-5, 5);
+
+                    // Gerar coeficientes com limites razoáveis
+                    const a1 = getNonZeroRandom(-10, 10);
+                    const b1 = getNonZeroRandom(-10, 10);
+                    const c1 = a1 * x + b1 * y;
+
+                    // Garantir que a segunda equação não seja múltiplo da primeira
+                    let a2, b2, c2;
+                    do {
+                        a2 = getNonZeroRandom(-10, 10);
+                        b2 = getNonZeroRandom(-10, 10);
+                        c2 = a2 * x + b2 * y;
+                    } while (a1 * b2 === a2 * b1);
+
+                    return {
+                        system: `\\begin{cases} 
+                            ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}y = ${c1} \\\\ 
+                            ${a2}x ${b2 >= 0 ? '+' : '-'} ${Math.abs(b2)}y = ${c2} 
+                        \\end{cases}`,
+                        solution: { x, y }
+                    };
+                }
+
+                // Função para validar números
+                function parseNumber(str) {
+                    // Verificar número decimal (com . ou ,)
+                    if (/^-?\d+([.,]\d+)?$/.test(str)) {
+                        return parseFloat(str.replace(',', '.'));
+                    }
+                    // Verificar fração simples (a/b)
+                    if (/^-?\d+\/-?\d+$/.test(str)) {
+                        const [num, den] = str.split('/').map(Number);
+                        return den !== 0 ? num / den : NaN;
+                    }
+                    // Verificar número misto (a b/c)
+                    if (/^-?\d+\s+-?\d+\/-?\d+$/.test(str)) {
+                        const parts = str.split(/\s+|\//);
+                        const whole = parseInt(parts[0]);
+                        const num = parseInt(parts[1]);
+                        const den = parseInt(parts[2]);
+                        return den !== 0 ? whole + (num / den) : NaN;
+                    }
+                    return NaN;
+                }
+
+                // Função para renderizar exercícios
+                function renderExercises() {
+                    container.innerHTML = '';
+                    correctAnswers = 0;
+                    exercisesData = [];
+
+                    for (let i = 1; i <= totalExercises; i++) {
+                        const { system, solution } = generateSystem();
+                        exercisesData.push({ system, solution });
+
+                        const exerciseEl = document.createElement('div');
+                        exerciseEl.className = 'exercise bg-gray-50 p-6 rounded-lg border border-gray-200 shadow';
+                        exerciseEl.dataset.index = i - 1;
+                        exerciseEl.dataset.solved = 'false';
+
+                        exerciseEl.innerHTML = `
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Exercício ${i}</h3>
+                                <div class="math-expression">
+                                    $${system}$
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">Resolva usando o método da ${currentMethod === 'substitution' ? 'substituição' : 'adição'}</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="flex items-center">
+                                    <label for="x-${i}" class="text-gray-700 mr-2">x =</label>
+                                    <input type="text" id="x-${i}" class="answer-input border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" placeholder="Valor de x" aria-label="Valor de x para o exercício ${i}">
+                                </div>
+                                <div class="flex items-center">
+                                    <label for="y-${i}" class="text-gray-700 mr-2">y =</label>
+                                    <input type="text" id="y-${i}" class="answer-input border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" placeholder="Valor de y" aria-label="Valor de y para o exercício ${i}">
+                                </div>
+                            </div>
+                            <button class="check-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition duration-200 mt-3" aria-label="Verificar resposta do exercício ${i}">
+                                Verificar
+                            </button>
+                            <div class="feedback mt-3 text-sm hidden" role="alert" aria-live="polite"></div>
+                        `;
+
+                        container.appendChild(exerciseEl);
+                    }
+
+                    if (window.MathJax) {
+                        MathJax.typesetPromise();
+                    }
+
+                    updateProgress();
+                    progressContainer.classList.remove('hidden');
+                    resultsSection.classList.add('hidden');
+                }
+
+                // Função para verificar respostas
+                function checkAnswer(exerciseEl, xAnswer, yAnswer) {
+                    const feedback = exerciseEl.querySelector('.feedback');
+                    const index = parseInt(exerciseEl.dataset.index);
+                    const correctSolution = exercisesData[index].solution;
+
+                    const xValue = parseNumber(xAnswer);
+                    const yValue = parseNumber(yAnswer);
+
+                    if (isNaN(xValue)) {
+                        feedback.textContent = 'Por favor, insira um número válido para x (ex: 2, 0.5, 1/2 ou 1 1/2)';
+                        feedback.className = 'feedback mt-3 text-sm text-red-500';
+                        feedback.classList.remove('hidden');
+                        return false;
+                    }
+
+                    if (isNaN(yValue)) {
+                        feedback.textContent = 'Por favor, insira um número válido para y (ex: 2, 0.5, 1/2 ou 1 1/2)';
+                        feedback.className = 'feedback mt-3 text-sm text-red-500';
+                        feedback.classList.remove('hidden');
+                        return false;
+                    }
+
+                    // Verificar resposta com tolerância para erros de arredondamento
+                    const isXCorrect = Math.abs(xValue - correctSolution.x) < 0.001;
+                    const isYCorrect = Math.abs(yValue - correctSolution.y) < 0.001;
+                    const isCorrect = isXCorrect && isYCorrect;
+
+                    if (isCorrect) {
+                        feedback.textContent = `✅ Correto! Solução: x = ${correctSolution.x}, y = ${correctSolution.y}`;
+                        feedback.className = 'feedback mt-3 text-sm text-green-500';
+                        if (exerciseEl.dataset.solved === 'false') {
+                            correctAnswers++;
+                            exerciseEl.dataset.solved = 'true';
+                        }
+                    } else {
+                        let message = '❌ Incorreto. ';
+                        if (!isXCorrect && !isYCorrect) {
+                            message += 'Ambos valores estão incorretos. ';
+                        } else if (!isXCorrect) {
+                            message += 'O valor de x está incorreto. ';
+                        } else {
+                            message += 'O valor de y está incorreto. ';
+                        }
+                        message += `A solução correta é x = ${correctSolution.x}, y = ${correctSolution.y}`;
+
+                        feedback.textContent = message;
+                        feedback.className = 'feedback mt-3 text-sm text-red-500';
+                        if (exerciseEl.dataset.solved === 'true') {
+                            correctAnswers--;
+                            exerciseEl.dataset.solved = 'false';
+                        }
+                    }
+
+                    // Desabilitar os campos de input após verificação
+                    exerciseEl.querySelectorAll('.answer-input').forEach(input => {
+                        input.disabled = true;
+                    });
+
+                    feedback.classList.remove('hidden');
+                    updateProgress();
+
+                    return isCorrect;
+                }
+
+                // Função para atualizar progresso
+                function updateProgress() {
+                    // Contar exercícios resolvidos corretamente
+                    const solvedExercises = document.querySelectorAll('.exercise[data-solved="true"]').length;
+                    const percentage = Math.round((solvedExercises / totalExercises) * 100);
+
+                    // Atualizar UI
+                    document.getElementById('progress-percent').textContent = `${percentage}%`;
+                    document.getElementById('progress-score').textContent = `${solvedExercises}/${totalExercises}`;
+                    document.getElementById('progress-ring').style.strokeDashoffset = 100 - percentage;
+
+                    // Atualizar mensagem motivacional
+                    const progressMessage = document.getElementById('progress-message');
+                    if (percentage === 100) {
+                        progressMessage.textContent = 'Parabéns! Você completou todos os exercícios!';
+                    } else if (percentage >= 70) {
+                        progressMessage.textContent = 'Ótimo trabalho! Continue assim!';
+                    } else if (percentage >= 30) {
+                        progressMessage.textContent = 'Você está no caminho certo!';
+                    } else {
+                        progressMessage.textContent = 'Continue praticando!';
+                    }
+                }
+
+                // Função para mostrar resultados
+                function showResults() {
+                    const solvedExercises = document.querySelectorAll('.exercise[data-solved="true"]').length;
+                    const percentage = Math.round((solvedExercises / totalExercises) * 100);
+
+                    document.getElementById('correct-count').textContent = solvedExercises;
+                    document.getElementById('incorrect-count').textContent = totalExercises - solvedExercises;
+                    document.getElementById('percentage').textContent = `${percentage}%`;
+
+                    const feedbackMessage = document.getElementById('feedback-message');
+                    if (percentage === 100) {
+                        feedbackMessage.textContent = 'Excelente! Você acertou todas as equações!';
+                        feedbackMessage.className = 'p-4 rounded-lg bg-green-100 text-green-800';
+                    } else if (percentage >= 70) {
+                        feedbackMessage.textContent = 'Bom trabalho! Você está indo muito bem com equações do primeiro grau.';
+                        feedbackMessage.className = 'p-4 rounded-lg bg-blue-100 text-blue-800';
+                    } else {
+                        feedbackMessage.textContent = 'Continue praticando! Reveja os exemplos e tente novamente.';
+                        feedbackMessage.className = 'p-4 rounded-lg bg-yellow-100 text-yellow-800';
+                    }
+
+                    resultsSection.classList.remove('hidden');
+                }
+
+                // Event Listeners
+                container.addEventListener('click', function (e) {
+                    if (e.target.classList.contains('check-btn')) {
+                        const exerciseEl = e.target.closest('.exercise');
+                        const xInput = exerciseEl.querySelector('input[id^="x-"]');
+                        const yInput = exerciseEl.querySelector('input[id^="y-"]');
+                        checkAnswer(exerciseEl, xInput.value.trim(), yInput.value.trim());
+                    }
+                });
+
+                document.getElementById('check-all-btn').addEventListener('click', function () {
+                    const exercises = document.querySelectorAll('.exercise');
+                    let allChecked = true;
+
+                    exercises.forEach(ex => {
+                        const xInput = ex.querySelector('input[id^="x-"]');
+                        const yInput = ex.querySelector('input[id^="y-"]');
+
+                        if (xInput.value.trim() === '' || yInput.value.trim() === '') {
+                            allChecked = false;
+                            const feedback = ex.querySelector('.feedback');
+                            feedback.textContent = 'Por favor, insira respostas para x e y antes de verificar.';
+                            feedback.className = 'feedback mt-3 text-sm text-red-500';
+                            feedback.classList.remove('hidden');
+                        } else if (!xInput.disabled) {
+                            checkAnswer(ex, xInput.value.trim(), yInput.value.trim());
+                        }
+                    });
+
+                    if (allChecked) {
+                        showResults();
+
+                        // Envia o resultado para o Telegram (igual ao index.html)
+                        const solved = document.querySelectorAll('.exercise[data-solved="true"]').length;
+                        const total = 10;
+                        const percent = Math.round((solved / total) * 100);
+                        sendToTelegram(
+                            `Aluno: ${studentName}\nTurma: ${studentClass}\nAcertos: ${solved}/${total}\nTaxa de acerto: ${percent}%`
+                        );
+                    }
+                });
+
+                document.getElementById('retry-incorrect-btn').addEventListener('click', function () {
+                    const incorrectExercises = Array.from(document.querySelectorAll('.exercise[data-solved="false"]'));
+
+                    if (incorrectExercises.length === 0) {
+                        alert('Parabéns! Você não tem exercícios incorretos para tentar novamente.');
+                        return;
+                    }
+
+                    // Gerar novos exercícios apenas para as posições incorretas
+                    incorrectExercises.forEach(ex => {
+                        const index = parseInt(ex.dataset.index);
+                        const { system, solution } = generateSystem();
+                        exercisesData[index] = { system, solution };
+
+                        ex.innerHTML = `
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Exercício ${index + 1}</h3>
+                                <div class="math-expression">
+                                    $${system}$
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">Resolva usando o método da ${currentMethod === 'substitution' ? 'substituição' : 'adição'}</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="flex items-center">
+                                    <label for="x-${index + 1}" class="text-gray-700 mr-2">x =</label>
+                                    <input type="text" id="x-${index + 1}" class="answer-input border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" placeholder="Valor de x" aria-label="Valor de x para o exercício ${index + 1}">
+                                </div>
+                                <div class="flex items-center">
+                                    <label for="y-${index + 1}" class="text-gray-700 mr-2">y =</label>
+                                    <input type="text" id="y-${index + 1}" class="answer-input border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" placeholder="Valor de y" aria-label="Valor de y para o exercício ${index + 1}">
+                                </div>
+                            </div>
+                            <button class="check-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition duration-200 mt-3" aria-label="Verificar resposta do exercício ${index + 1}">
+                                Verificar
+                            </button>
+                            <div class="feedback mt-3 text-sm hidden" role="alert" aria-live="polite"></div>
+                        `;
+                    });
+
+                    if (window.MathJax) {
+                        MathJax.typesetPromise();
+                    }
+
+                    resultsSection.classList.add('hidden');
+                });
+
+                document.getElementById('reset-all-btn').addEventListener('click', function () {
+                    renderExercises();
+                });
+
+                // Inicializar exercícios
+                renderExercises();
+            }
+        });
+    </script>
+</body>
+<script src="js/monitoramento.js"></script>
+
+</html>
