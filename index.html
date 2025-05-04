@@ -442,6 +442,7 @@
             let studentName = '';
             let studentClass = '';
             let currentMethod = 'substitution'; // Padrão: substituição
+            let totalExercises = 10; // Corrija para 10 para bater com o envio do Telegram
 
             // Elementos do modal
             const modal = document.getElementById('student-modal');
@@ -474,7 +475,11 @@
                     const message = `📊 Início de Atividade detectada: Sistemas Lineares\n` +
                         `👨‍🎓 ${studentName} - ${studentClass}\n🕒 Início: ${startTimeStr}\n\n`;
 
-                    sendToTelegram(message);
+                    if (typeof sendToTelegram === "function") {
+                        sendToTelegram(message);
+                    } else {
+                        console.error("Função sendToTelegram não encontrada.");
+                    }
 
                     // Esconder modal e mostrar conteúdo principal
                     modal.classList.add('hidden');
@@ -485,7 +490,7 @@
                     document.getElementById('check-all-btn').addEventListener('click', function telegramResultListener() {
                         setTimeout(() => {
                             const solved = document.querySelectorAll('.exercise[data-solved="true"]').length;
-                            const total = 10;
+                            const total = totalExercises;
                             const percent = Math.round((solved / total) * 100);
 
                             // Calcula o tempo gasto
@@ -498,14 +503,17 @@
                             // Só envia se todos foram verificados
                             if (solved + document.querySelectorAll('.exercise[data-solved="false"]').length === total) {
                                 const resultMessage = `🏁 Finalização de Atividade: Sistemas Lineares\n` +
-                                    `👨‍🎓 ${studentName} -  ${studentClass}\n` +
+                                    `👨‍🎓 ${studentName} - ${studentClass}\n` +
                                     `✅ Acertos: ${solved}/${total}\n` +
                                     `📈 Taxa de acerto: ${percent}%\n` +
                                     `⏳ Tempo gasto: ${minutes}min ${seconds}s`;
-                                sendToTelegram(resultMessage);
+                                if (typeof sendToTelegram === "function") {
+                                    sendToTelegram(resultMessage);
+                                } else {
+                                    console.error("Função sendToTelegram não encontrada.");
+                                }
                             }
                         }, 500);
-                        this.removeEventListener('click', telegramResultListener);
                     }, { once: true });
                 }
             });
@@ -515,7 +523,7 @@
                 const progressContainer = document.getElementById('progress-container');
                 const resultsSection = document.getElementById('results-section');
                 let correctAnswers = 0;
-                const totalExercises = 25;
+                totalExercises = 25;
                 let exercisesData = [];
                 let startTime = new Date();
 
@@ -778,14 +786,6 @@
 
                     if (allChecked) {
                         showResults();
-
-                        // Envia o resultado para o Telegram (igual ao index.html)
-                        const solved = document.querySelectorAll('.exercise[data-solved="true"]').length;
-                        const total = 10;
-                        const percent = Math.round((solved / total) * 100);
-                        sendToTelegram(
-                            `Aluno: ${studentName}\nTurma: ${studentClass}\nAcertos: ${solved}/${total}\nTaxa de acerto: ${percent}%`
-                        );
                     }
                 });
 
